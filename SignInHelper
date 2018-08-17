@@ -3,6 +3,14 @@
 
 TOOL_NAME="Microsoft Office for Mac Sign In Helper"
 TOOL_VERSION="1.2.1"
+TOOL_VERSION_MIN0R="UQ 0.1"
+
+if [ "$4" == "" ]; then
+	echo "Error: JAMF Script Parameter 4 not supplied, please enter hostname of an Active Directory server in the policy calling this script."
+	exit 1
+fi
+
+UQAD="$4"
 
 ## Copyright (c) 2018 Microsoft Corp. All rights reserved.
 ## Scripts are not supported under any Microsoft standard support program or service. The scripts are provided AS IS without warranty of any kind.
@@ -16,6 +24,8 @@ TOOL_VERSION="1.2.1"
 
 ## This script is Jamf Pro compatible and can be pasted directly, without modification, into a new script window in the Jamf admin console.
 ## When running under Jamf Pro, no additional parameters need to be specified.
+
+# Modified by UQ Institute IT to allow specification of AD server via a JAMF script parameter.
 
 # Shows tool usage and parameters
 function ShowUsage {
@@ -105,7 +115,7 @@ function GetDomainName {
 # Get the defaultNamingContext from LDAP
 function GetDefaultNamingContext {
 	local DOMAIN="$1"
-	local DOMAINNC=$(${CMD_PREFIX} /usr/bin/ldapsearch -H "ldap://$DOMAIN" -LLL -b '' -s base defaultNamingContext | grep -o 'defaultNamingContext:.*' | cut -d : -f2 | cut -d' ' -f2 2> /dev/null)
+	local DOMAINNC=$(${CMD_PREFIX} /usr/bin/ldapsearch -H "ldap://$UQAD" -LLL -b '' -s base defaultNamingContext | grep -o 'defaultNamingContext:.*' | cut -d : -f2 | cut -d' ' -f2 2> /dev/null)
 	if [ "$DOMAINNC" == "" ]; then
 		echo "0"
 	else
@@ -118,7 +128,7 @@ function GetUPN {
 	local DOMAIN="$1"
 	local NAMESPACE="$2"
 	local ACCOUNT="$3"
-	local UPN=$(${CMD_PREFIX} /usr/bin/ldapsearch -H "ldap://$DOMAIN" -LLL -b "$NAMESPACE" -s sub samAccountName=$ACCOUNT userPrincipalName | grep -o 'userPrincipalName:.*' | cut -d : -f2 | cut -d' ' -f2 2> /dev/null)
+	local UPN=$(${CMD_PREFIX} /usr/bin/ldapsearch -H "ldap://$UQAD" -LLL -b "$NAMESPACE" -s sub samAccountName=$ACCOUNT userPrincipalName | grep -o 'userPrincipalName:.*' | cut -d : -f2 | cut -d' ' -f2 2> /dev/null)
 	if [ "$UPN" == "" ]; then
 		echo "0"
 	else
@@ -131,7 +141,7 @@ function GetDisplayName {
 	local DOMAIN="$1"
 	local NAMESPACE="$2"
 	local ACCOUNT="$3"
-	local DISPLAYNAME=$(${CMD_PREFIX} /usr/bin/ldapsearch -H "ldap://$DOMAIN" -LLL -b "$NAMESPACE" -s sub samAccountName=$ACCOUNT displayName | grep -o 'displayName:.*' | cut -d : -f2 | cut -c 2- 2> /dev/null)
+	local DISPLAYNAME=$(${CMD_PREFIX} /usr/bin/ldapsearch -H "ldap://$UQAD" -LLL -b "$NAMESPACE" -s sub samAccountName=$ACCOUNT displayName | grep -o 'displayName:.*' | cut -d : -f2 | cut -c 2- 2> /dev/null)
 	if [ "$DISPLAYNAME" == "" ]; then
 		echo "0"
 	else
